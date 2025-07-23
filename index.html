@@ -15,25 +15,28 @@
     .compare-result { margin-top: 20px; font-weight: bold; text-align: center; }
     .rank-buttons { display: flex; flex-wrap: wrap; gap: 4px; margin-top: 8px; }
     .rank-buttons button { flex: 1; min-width: 40px; }
+    .pokemon-image { display: block; margin: 12px auto 0; width: 120px; height: auto; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
   </style>
 </head>
 <body>
     <img src="banner.png" alt="ポケモンすばやさ比較ツール バナー" style="width: 70%; height: auto; border-radius: 12px; box-shadow: 0 4px 8px rgba(0,0,0,0.1); margin: 0px auto; display: block;">
-  <h1>ポケモンすばやさ比較ツール</h1>
+
   <div class="pokemon-select">
     <div class="box">
       <label for="poke1">ポケモンA</label>
-      <select id="poke1" onchange="showSpeed('poke1', 'table1', 'rank1')">
+      <select id="poke1" onchange="showSpeed('poke1', 'table1', 'rank1', 'img1')">
         <option value="">選択してください</option>
       </select>
+      <img id="img1" class="pokemon-image" src="" alt="">
       <div class="rank-buttons" id="rank1"></div>
       <table id="table1"></table>
     </div>
     <div class="box">
       <label for="poke2">ポケモンB</label>
-      <select id="poke2" onchange="showSpeed('poke2', 'table2', 'rank2')">
+      <select id="poke2" onchange="showSpeed('poke2', 'table2', 'rank2', 'img2')">
         <option value="">選択してください</option>
       </select>
+      <img id="img2" class="pokemon-image" src="" alt="">
       <div class="rank-buttons" id="rank2"></div>
       <table id="table2"></table>
     </div>
@@ -42,16 +45,16 @@
 
   <script>
     const pokemonData = {
-      "ミライドン": [205, 187, 155, 139, 126],
-      "ガオガエン": [123, 112, 80, 72, 58],
-      "連撃ウーラオス": [163, 149, 117, 105, 91],
-      "黒馬バドレックス": [222, 202, 170, 153, 139],
-      "白馬バドレックス": [112, 102, 70, 63, 49],
-      "ゴリランダー": [150, 137, 105, 94, 81],
-      "ザマゼンタ": [198, 180, 148, 133, 119],
-      "エルフーン": [184, 168, 136, 122, 108],
-      "カイオーガ": [156, 142, 110, 99, 85],
-      "トルネロス": [179, 163, 131, 117, 104]
+      "ミライドン": { speeds: [205, 187, 155, 139, 126], image: "img/miraidon.png" },
+      "ガオガエン": { speeds: [123, 112, 80, 72, 58], image: "img/incineroar.png" },
+      "連撃ウーラオス": { speeds: [163, 149, 117, 105, 91], image: "img/urshifu.png" },
+      "黒馬バドレックス": { speeds: [222, 202, 170, 153, 139], image: "img/calyrex-shadow.png" },
+      "白馬バドレックス": { speeds: [112, 102, 70, 63, 49], image: "img/calyrex-ice.png" },
+      "ゴリランダー": { speeds: [150, 137, 105, 94, 81], image: "img/rillaboom.png" },
+      "ザマゼンタ": { speeds: [198, 180, 148, 133, 119], image: "img/zamazenta.png" },
+      "エルフーン": { speeds: [184, 168, 136, 122, 108], image: "img/whimsicott.png" },
+      "カイオーガ": { speeds: [156, 142, 110, 99, 85], image: "img/kyogre.png" },
+      "トルネロス": { speeds: [179, 163, 131, 117, 104], image: "img/tornadus.png" }
     };
 
     const rankMultipliers = {
@@ -85,21 +88,26 @@
         btn.onclick = () => {
           container.querySelectorAll('button').forEach(b => b.disabled = false);
           btn.disabled = true;
-          showSpeed(selectId, tableId, containerId, rank);
+          showSpeed(selectId, tableId, containerId, selectId === 'poke1' ? 'img1' : 'img2', rank);
         };
         if (rank === "0") btn.disabled = true;
         container.appendChild(btn);
       }
     }
 
-    function showSpeed(selectId, tableId, rankContainerId, selectedRank = "0") {
+    function showSpeed(selectId, tableId, rankContainerId, imgId, selectedRank = "0") {
       const name = document.getElementById(selectId).value;
       const table = document.getElementById(tableId);
       table.innerHTML = '';
       if (!name) return;
-      const speeds = pokemonData[name];
+      const data = pokemonData[name];
+      const speeds = data.speeds;
       const ranks = ["最速", "準速", "無振", "下降1", "下降2"];
       const mult = rankMultipliers[selectedRank];
+
+      const img = document.getElementById(imgId);
+      img.src = data.image;
+      img.alt = name;
 
       let html = '<tr><th>ランク</th><th>すばやさ（補正込み）</th></tr>';
       for (let i = 0; i < speeds.length; i++) {
@@ -121,8 +129,8 @@
       }
       const rank1 = document.querySelector('#rank1 button:disabled').textContent;
       const rank2 = document.querySelector('#rank2 button:disabled').textContent;
-      const speed1 = Math.floor(pokemonData[poke1][0] * rankMultipliers[rank1]);
-      const speed2 = Math.floor(pokemonData[poke2][0] * rankMultipliers[rank2]);
+      const speed1 = Math.floor(pokemonData[poke1].speeds[0] * rankMultipliers[rank1]);
+      const speed2 = Math.floor(pokemonData[poke2].speeds[0] * rankMultipliers[rank2]);
 
       let msg = '';
       if (speed1 > speed2) msg = `${poke1}（${rank1}）は ${poke2}（${rank2}）より速いです。`;
