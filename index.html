@@ -63,16 +63,20 @@
     async function fetchBaseSpeed(japaneseName) {
       const englishName = nameMap[japaneseName];
       if (!englishName) return null;
-      const res = await fetch(`https://pokeapi.co/api/v2/pokemon/${englishName}`);
-      const data = await res.json();
-      const speedStat = data.stats.find(stat => stat.stat.name === "speed");
-      baseSpeeds[japaneseName] = speedStat.base_stat;
+      try {
+        const res = await fetch(`https://pokeapi.co/api/v2/pokemon/${englishName}`);
+        const data = await res.json();
+        const speedStat = data.stats.find(stat => stat.stat.name === "speed");
+        baseSpeeds[japaneseName] = speedStat.base_stat;
+      } catch (err) {
+        console.error(`⚠️ ${japaneseName} の取得に失敗しました`, err);
+        baseSpeeds[japaneseName] = 100; // 仮の数値
+      }
     }
 
     async function preloadBaseSpeeds() {
-      for (const name of Object.keys(nameMap)) {
-        await fetchBaseSpeed(name);
-      }
+      const promises = Object.keys(nameMap).map(name => fetchBaseSpeed(name));
+      await Promise.all(promises);
       populateSelectors();
     }
 
